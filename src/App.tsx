@@ -8,6 +8,7 @@ import {
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import type { Doc, Id } from "../convex/_generated/dataModel";
+import { APP_NAME } from "./brand";
 
 function getRoomIdFromSearch(): string | null {
   const id = new URLSearchParams(window.location.search).get("room");
@@ -133,12 +134,13 @@ export default function App() {
 
   if (!roomId) {
     return (
-      <main className="shell">
-        <div className="card">
-          <h1 className="title">Study Tracker</h1>
-          <p className="muted">
-            Create or join a room by name. Everyone in the same room sees updates
-            instantly.
+      <main className="shell landing-shell">
+        <div className="card landing-card">
+          <p className="brand-mark">{APP_NAME}</p>
+          <h1 className="brand-title">Study together, live</h1>
+          <p className="muted landing-lead">
+            Create or join a room by name. Everyone in the same room sees tasks and
+            progress update instantly.
           </p>
           {notice ? (
             <div className="notice-row" role="status">
@@ -209,6 +211,7 @@ export default function App() {
     <main className="shell">
       <header className="header">
         <div>
+          <p className="room-brand">{APP_NAME}</p>
           <h1 className="title">{room.name}</h1>
           <p className="muted small">
             Real-time · share this URL to study together

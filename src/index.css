@@ -263,3 +263,66 @@ body {
   list-style: none;
   padding: 0.25rem 0 0;
 }
+
+#root {
+  min-height: 100vh;
+}
+
+.landing-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(100vh, 900px);
+  padding-top: 1rem;
+}
+
+.landing-card {
+  width: 100%;
+  max-width: 26rem;
+  text-align: center;
+}
+
+.landing-card .stack,
+.landing-card .label {
+  text-align: left;
+}
+
+.brand-mark {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.brand-title {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.75rem;
+  line-height: 1.2;
+}
+
+.landing-lead {
+  margin: 0 0 1.25rem;
+  text-align: left;
+}
+
+.inline-code {
+  font-size: 0.85em;
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--accent);
+}
+
+.room-brand {
+  margin: 0 0 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
