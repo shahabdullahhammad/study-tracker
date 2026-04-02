@@ -1,11 +1,26 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
+import { ConvexReactClient } from "convex/react";
 import App from "./App";
 import { APP_NAME } from "./brand";
+import { agentLog } from "./debugSession";
 import "./index.css";
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
+
+// #region agent log
+if (!convexUrl) {
+  agentLog("main.tsx", "bootstrap branch missing VITE_CONVEX_URL", "H1", {
+    hasConvexUrl: false,
+  });
+} else {
+  agentLog("main.tsx", "bootstrap branch Convex client render", "H1", {
+    hasConvexUrl: true,
+    urlCharLength: convexUrl.length,
+  });
+}
+// #endregion
 
 function MissingConvexConfig() {
   return (
@@ -39,9 +54,9 @@ if (!convexUrl) {
   const convex = new ConvexReactClient(convexUrl);
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <ConvexProvider client={convex}>
+      <ConvexAuthProvider client={convex}>
         <App />
-      </ConvexProvider>
+      </ConvexAuthProvider>
     </StrictMode>,
   );
 }

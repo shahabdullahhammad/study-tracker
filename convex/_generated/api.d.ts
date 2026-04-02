@@ -8,7 +8,19 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
+import type * as auth from "../auth.js";
+import type * as chat from "../chat.js";
+import type * as dashboard from "../dashboard.js";
+import type * as debugIngest from "../debugIngest.js";
 import type * as hello from "../hello.js";
+import type * as http from "../http.js";
+import type * as identity from "../identity.js";
+import type * as members from "../members.js";
+import type * as profile from "../profile.js";
+import type * as quizProgress from "../quizProgress.js";
+import type * as roomModeration from "../roomModeration.js";
+import type * as roomMusic from "../roomMusic.js";
 import type * as rooms from "../rooms.js";
 import type * as tasks from "../tasks.js";
 
@@ -19,7 +31,19 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
+  auth: typeof auth;
+  chat: typeof chat;
+  dashboard: typeof dashboard;
+  debugIngest: typeof debugIngest;
   hello: typeof hello;
+  http: typeof http;
+  identity: typeof identity;
+  members: typeof members;
+  profile: typeof profile;
+  quizProgress: typeof quizProgress;
+  roomModeration: typeof roomModeration;
+  roomMusic: typeof roomMusic;
   rooms: typeof rooms;
   tasks: typeof tasks;
 }>;

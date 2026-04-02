@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { nameKeyFromRaw, requireRoomMember } from "./identity";
 
 const MAX_TASKS_PER_ROOM = 500;
 const MAX_TITLE_LENGTH = 500;
@@ -64,6 +65,7 @@ export const createTask = mutation({
       order: nextOrder,
       createdAt: now,
       updatedAt: now,
+      timeSpentSeconds: 0,
     });
     await ctx.db.patch(args.roomId, { taskSeq: nextOrder + 1 });
     return taskId;
@@ -91,13 +93,179 @@ export const toggleTaskComplete = mutation({
     }
     const now = Date.now();
     const completed = !task.completed;
+    let completedBy: string | undefined;
+    if (completed && args.completedBy != null && args.completedBy !== "") {
+      const { displayName } = await requireRoomMember(
+        ctx,
+        args.roomId,
+        args.completedBy,
+      );
+      completedBy = displayName;
+    }
     await ctx.db.patch(args.taskId, {
       completed,
       updatedAt: now,
-      completedBy: completed ? args.completedBy : undefined,
+      completedBy,
       completedAt: completed ? now : undefined,
     });
     return { completed, updatedAt: now };
+  },
+});
+
+export const setMyTaskCompletion = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    taskId: v.id("tasks"),
+    completed: v.boolean(),
+    contributorName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { displayName } = await requireRoomMember(
+      ctx,
+      args.roomId,
+      args.contributorName,
+    );
+    const nameKey = nameKeyFromRaw(args.contributorName);
+    const task = await ctx.db.get(args.taskId);
+    if (!task) throw new Error("Task not found");
+    if (task.roomId !== args.roomId) {
+      throw new Error("Task does not belong to this room");
+    }
+    const now = Date.now();
+    const existing = await ctx.db
+      .query("taskCompletions")
+      .withIndex("by_task_member", (q) =>
+        q.eq("taskId", args.taskId).eq("nameKey", nameKey),
+      )
+      .first();
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        completed: args.completed,
+        displayName,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("taskCompletions", {
+        roomId: args.roomId,
+        taskId: args.taskId,
+        displayName,
+        nameKey,
+        completed: args.completed,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+export const listTaskCompletionsByRoom = query({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room) return null;
+    return await ctx.db
+      .query("taskCompletions")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+  },
+});
+
+export const listTaskMemberTimesByRoom = query({
+  args: { roomId: v.id("rooms") },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room) return null;
+    return await ctx.db
+      .query("taskMemberTime")
+      .withIndex("by_room", (q) => q.eq("roomId", args.roomId))
+      .collect();
+  },
+});
+
+const MAX_SECONDS_PER_ADD = 8 * 60 * 60;
+const MAX_TOTAL_STUDY_SECONDS = 999 * 60 * 60;
+const MAX_MEMBER_TOTAL_SECONDS = 99999 * 60 * 60;
+
+export const addTaskTime = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    taskId: v.id("tasks"),
+    secondsToAdd: v.number(),
+    /** Must match a name you registered when joining this room. */
+    contributorName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { displayName: contributorName } = await requireRoomMember(
+      ctx,
+      args.roomId,
+      args.contributorName,
+    );
+    if (args.secondsToAdd <= 0 || args.secondsToAdd > MAX_SECONDS_PER_ADD) {
+      throw new Error("Add between 1 second and 8 hours per sync");
+    }
+    const task = await ctx.db.get(args.taskId);
+    if (!task) throw new Error("Task not found");
+    if (task.roomId !== args.roomId) {
+      throw new Error("Task does not belong to this room");
+    }
+    const prev = task.timeSpentSeconds ?? 0;
+    if (prev + args.secondsToAdd > MAX_TOTAL_STUDY_SECONDS) {
+      throw new Error("Total study time for this task is too large");
+    }
+    const now = Date.now();
+    await ctx.db.patch(args.taskId, {
+      timeSpentSeconds: prev + args.secondsToAdd,
+      updatedAt: now,
+    });
+
+    const existing = await ctx.db
+      .query("roomMemberStats")
+      .withIndex("by_room_name", (q) =>
+        q.eq("roomId", args.roomId).eq("displayName", contributorName),
+      )
+      .first();
+    const memberPrev = existing?.totalStudySeconds ?? 0;
+    if (memberPrev + args.secondsToAdd > MAX_MEMBER_TOTAL_SECONDS) {
+      throw new Error("Recorded study time for this name is too large");
+    }
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        totalStudySeconds: memberPrev + args.secondsToAdd,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("roomMemberStats", {
+        roomId: args.roomId,
+        displayName: contributorName,
+        totalStudySeconds: args.secondsToAdd,
+        updatedAt: now,
+      });
+    }
+
+    const nk = nameKeyFromRaw(contributorName);
+    const tmt = await ctx.db
+      .query("taskMemberTime")
+      .withIndex("by_task_member", (q) =>
+        q.eq("taskId", args.taskId).eq("nameKey", nk),
+      )
+      .first();
+    if (tmt) {
+      await ctx.db.patch(tmt._id, {
+        seconds: tmt.seconds + args.secondsToAdd,
+        displayName: contributorName,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("taskMemberTime", {
+        roomId: args.roomId,
+        taskId: args.taskId,
+        displayName: contributorName,
+        nameKey: nk,
+        seconds: args.secondsToAdd,
+        updatedAt: now,
+      });
+    }
+
+    return { timeSpentSeconds: prev + args.secondsToAdd };
   },
 });
 
