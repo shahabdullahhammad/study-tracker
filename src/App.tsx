@@ -201,8 +201,8 @@ function DevDebugLogButton() {
         <span
           style={{
             fontSize: 12,
-            background: "#0c1528",
-            color: "#e8f0ff",
+            background: "#f3f4f6",
+            color: "#1a1a2e",
             padding: "4px 8px",
             borderRadius: 6,
             maxWidth: 220,
@@ -232,6 +232,18 @@ function DevDebugLogButton() {
 }
 
 export default function App() {
+  const [devSkipAuth, setDevSkipAuth] = useState(false);
+
+  if (import.meta.env.DEV && devSkipAuth) {
+    return (
+      <>
+        <AuthSessionDebug />
+        <DevDebugLogButton />
+        <StudyApp />
+      </>
+    );
+  }
+
   return (
     <>
       <AuthSessionDebug />
@@ -244,7 +256,7 @@ export default function App() {
         </main>
       </AuthLoading>
       <Unauthenticated>
-        <SignInPage />
+        <SignInPage onDevSkip={import.meta.env.DEV ? () => setDevSkipAuth(true) : undefined} />
       </Unauthenticated>
       <Authenticated>
         <StudyApp />
@@ -811,253 +823,51 @@ function StudyApp() {
 
   if (!roomId) {
     return (
-      <main className="shell room-shell dashboard-page">
-        <header className="dashboard-header card">
-          <div className="dashboard-user-row">
-            {myProfile?.avatarUrl ? (
-              <img
-                src={myProfile.avatarUrl}
-                alt=""
-                className="avatar-img"
-                width={48}
-                height={48}
-              />
-            ) : (
-              <div className="avatar-fallback" aria-hidden />
-            )}
-            <div className="dashboard-user-info">
-              <p className="dashboard-email muted small">
-                {myProfile?.email ?? "…"}
-              </p>
-              <div className="dashboard-user-actions">
-                <button
-                  type="button"
-                  className="btn ghost"
-                  onClick={() => {
-                    setProfileNameDraft(myProfile?.name ?? "");
-                    setProfileImageDraft(myProfile?.image ?? "");
-                    setProfileOpen(true);
-                  }}
-                >
-                  Profile
-                </button>
-                <button
-                  type="button"
-                  className="btn ghost"
-                  onClick={() => void signOut()}
-                >
-                  Sign out
-                </button>
+      <div className="dash">
+        {/* ── Top bar ── */}
+        <header className="dash-topbar">
+          <div className="dash-topbar-inner">
+            <span className="dash-topbar-brand">{APP_NAME}</span>
+            <div className="dash-topbar-right">
+              <div className="dash-topbar-user">
+                {myProfile?.avatarUrl ? (
+                  <img
+                    src={myProfile.avatarUrl}
+                    alt=""
+                    className="avatar-img dash-topbar-avatar"
+                    width={32}
+                    height={32}
+                  />
+                ) : (
+                  <div className="avatar-fallback dash-topbar-avatar" style={{ width: 32, height: 32 }} aria-hidden />
+                )}
+                <span className="dash-topbar-name">
+                  {myProfile?.name || myProfile?.email?.split("@")[0] || "…"}
+                </span>
               </div>
+              <button
+                type="button"
+                className="btn ghost dash-topbar-btn"
+                onClick={() => {
+                  setProfileNameDraft(myProfile?.name ?? "");
+                  setProfileImageDraft(myProfile?.image ?? "");
+                  setProfileOpen(true);
+                }}
+              >
+                Profile
+              </button>
+              <button
+                type="button"
+                className="btn ghost dash-topbar-btn"
+                onClick={() => void signOut()}
+              >
+                Sign out
+              </button>
             </div>
           </div>
         </header>
 
-        <DashboardQuizzes
-          myProfile={myProfile ?? undefined}
-          onSaveLearningProfile={async (args) => {
-            await updateMyProfile(args);
-          }}
-          setNotice={setNotice}
-        />
-
-        {savedRooms && savedRooms.length > 0 ? (
-          <section className="card dashboard-saved">
-            <h2 className="sidebar-heading">Your rooms</h2>
-            <ul className="saved-room-list">
-              {savedRooms.map((r) => (
-                <li key={r._id}>
-                  <button
-                    type="button"
-                    className="btn saved-room-link"
-                    onClick={() => setRoomId(r.roomId)}
-                  >
-                    {r.roomName}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {isSiteOwner ? (
-          <section className="card admin-card">
-            <h2 className="sidebar-heading">Site admin</h2>
-            <p className="muted small">
-              Delete any room by exact name (owner account only).
-            </p>
-            <div className="row admin-delete-row">
-              <input
-                className="input grow"
-                value={adminDeleteName}
-                onChange={(e) => setAdminDeleteName(e.target.value)}
-                placeholder="Room name to delete"
-                autoComplete="off"
-              />
-              <button
-                type="button"
-                className="btn danger-outline"
-                disabled={adminDeleting || !adminDeleteName.trim()}
-                onClick={() => {
-                  void (async () => {
-                    setAdminDeleting(true);
-                    setNotice(null);
-                    try {
-                      await deleteRoomByName({
-                        name: adminDeleteName.trim(),
-                      });
-                      setAdminDeleteName("");
-                      setNotice("Room deleted.");
-                    } catch (e) {
-                      setNotice(
-                        e instanceof Error ? e.message : "Could not delete",
-                      );
-                    } finally {
-                      setAdminDeleting(false);
-                    }
-                  })();
-                }}
-              >
-                {adminDeleting ? "…" : "Delete room"}
-              </button>
-            </div>
-          </section>
-        ) : null}
-
-        {profileOpen ? (
-          <section className="card profile-editor">
-            <h2 className="sidebar-heading">Your profile</h2>
-            <p className="muted small">
-              Display name is used as your default label in rooms. Upload a
-              photo here, or paste an HTTPS image URL (OAuth avatars stay until
-              you replace them).
-            </p>
-            <div className="profile-avatar-row">
-              {myProfile?.avatarUrl ? (
-                <img
-                  src={myProfile.avatarUrl}
-                  alt=""
-                  className="avatar-img profile-avatar-preview"
-                  width={72}
-                  height={72}
-                />
-              ) : (
-                <div
-                  className="avatar-fallback profile-avatar-preview"
-                  aria-hidden
-                />
-              )}
-              <div className="profile-avatar-actions">
-                <label className="btn ghost profile-upload-label">
-                  {avatarUploading ? "Uploading…" : "Upload photo"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="visually-hidden"
-                    disabled={avatarUploading}
-                    onChange={(e) => {
-                      const f = e.target.files?.[0] ?? null;
-                      e.target.value = "";
-                      void onAvatarFileSelected(f);
-                    }}
-                  />
-                </label>
-                {myProfile?.imageStorageId ? (
-                  <button
-                    type="button"
-                    className="btn ghost small"
-                    disabled={avatarUploading}
-                    onClick={() => {
-                      void (async () => {
-                        setNotice(null);
-                        try {
-                          await removeAvatarUpload();
-                        } catch (err) {
-                          setNotice(
-                            err instanceof Error
-                              ? err.message
-                              : "Could not remove photo",
-                          );
-                        }
-                      })();
-                    }}
-                  >
-                    Remove upload
-                  </button>
-                ) : null}
-              </div>
-            </div>
-            <label className="label">
-              Display name
-              <input
-                className="input"
-                value={profileNameDraft}
-                onChange={(e) => setProfileNameDraft(e.target.value)}
-                autoComplete="name"
-              />
-            </label>
-            <label className="label">
-              Profile picture URL (optional)
-              <input
-                className="input"
-                value={profileImageDraft}
-                onChange={(e) => setProfileImageDraft(e.target.value)}
-                placeholder="https://…"
-                autoComplete="off"
-              />
-            </label>
-            <div className="landing-actions">
-              <button
-                type="button"
-                className="btn primary"
-                disabled={profileSaving}
-                onClick={() => {
-                  void (async () => {
-                    setProfileSaving(true);
-                    setNotice(null);
-                    try {
-                      await updateMyProfile({
-                        name: profileNameDraft,
-                        image: profileImageDraft,
-                      });
-                      setProfileOpen(false);
-                      setDisplayName(profileNameDraft.trim());
-                      persistDisplayName(profileNameDraft.trim());
-                      if (roomId) {
-                        writeJoinedSession(roomId, profileNameDraft.trim());
-                        setSessionJoinName(profileNameDraft.trim());
-                      }
-                    } catch (e) {
-                      setNotice(
-                        e instanceof Error ? e.message : "Could not save",
-                      );
-                    } finally {
-                      setProfileSaving(false);
-                    }
-                  })();
-                }}
-              >
-                {profileSaving ? "Saving…" : "Save profile"}
-              </button>
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() => setProfileOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </section>
-        ) : null}
-
-        <div className="card landing-card">
-          <p className="brand-mark">{APP_NAME}</p>
-          <h1 className="brand-title">Study together, live</h1>
-          <p className="muted landing-lead">
-            Your display name must be unique in each room. Creating a room
-            sets a password only you share — others need it to join. Sign in
-            is required. Your rooms appear above after you join.
-          </p>
+        <main className="dash-body">
           {notice ? (
             <div className="notice-row" role="status">
               <p className="notice">{notice}</p>
@@ -1071,92 +881,296 @@ function StudyApp() {
               </button>
             </div>
           ) : null}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-            className="stack"
-          >
-            <label className="label">
-              Room name
-              <input
-                className="input"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                placeholder="e.g. CS101 finals"
-                autoComplete="off"
+
+          <div className="dash-grid">
+            {/* ── Left column: rooms + create/join ── */}
+            <aside className="dash-sidebar">
+              {/* Quick actions */}
+              <section className="card dash-card">
+                <h2 className="dash-card-title">Create or join a room</h2>
+                <p className="muted small dash-card-desc">
+                  Rooms are password-protected. Create one or join with the
+                  room name and password from the owner.
+                </p>
+                <form
+                  onSubmit={(e) => { e.preventDefault(); }}
+                  className="dash-form-stack"
+                >
+                  <label className="label">
+                    Room name
+                    <input
+                      className="input"
+                      value={roomName}
+                      onChange={(e) => setRoomName(e.target.value)}
+                      placeholder="e.g. CS101 finals"
+                      autoComplete="off"
+                    />
+                  </label>
+                  <label className="label">
+                    Room password
+                    <input
+                      className="input"
+                      type="password"
+                      value={roomPassword}
+                      onChange={(e) => setRoomPassword(e.target.value)}
+                      placeholder={
+                        roomPreview?.exists === false
+                          ? "Min 4 chars — you choose"
+                          : roomPreview?.exists === true && roomPreview.hasPassword
+                            ? "From the room owner"
+                            : "Leave blank for older rooms"
+                      }
+                      autoComplete="new-password"
+                    />
+                  </label>
+                  {roomName.trim() && roomPreview === undefined ? (
+                    <p className="muted small">Checking room…</p>
+                  ) : roomPreview?.exists === false ? (
+                    <p className="muted small">
+                      New room — set a password (min 4 chars).
+                    </p>
+                  ) : roomPreview?.exists === true && roomPreview.hasPassword ? (
+                    <p className="muted small">
+                      Password-protected. Enter the owner's password.
+                    </p>
+                  ) : null}
+                  <div className="dash-form-actions">
+                    <button
+                      type="button"
+                      className="btn primary"
+                      disabled={
+                        joining ||
+                        !displayName.trim() ||
+                        !roomName.trim() ||
+                        (Boolean(roomName.trim()) && roomPreview === undefined) ||
+                        roomPreview?.exists === true
+                      }
+                      onClick={() => void attemptCreateOrJoin("create")}
+                    >
+                      {joining && joinMode === "create" ? "Creating…" : "Create"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn dash-join-btn"
+                      disabled={
+                        joining ||
+                        !displayName.trim() ||
+                        !roomName.trim() ||
+                        (Boolean(roomName.trim()) && roomPreview === undefined) ||
+                        roomPreview?.exists === false
+                      }
+                      onClick={() => void attemptCreateOrJoin("join")}
+                    >
+                      {joining && joinMode === "join" ? "Joining…" : "Join"}
+                    </button>
+                  </div>
+                </form>
+              </section>
+
+              {/* Saved rooms */}
+              <section className="card dash-card">
+                <h2 className="dash-card-title">Your rooms</h2>
+                {savedRooms && savedRooms.length > 0 ? (
+                  <ul className="dash-room-list">
+                    {savedRooms.map((r) => (
+                      <li key={r._id}>
+                        <button
+                          type="button"
+                          className="dash-room-item"
+                          onClick={() => setRoomId(r.roomId)}
+                        >
+                          <span className="dash-room-icon" aria-hidden>⬡</span>
+                          <span className="dash-room-name">{r.roomName}</span>
+                          <span className="dash-room-arrow" aria-hidden>→</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="muted small">No rooms yet. Create or join one above.</p>
+                )}
+              </section>
+
+              {/* Site admin */}
+              {isSiteOwner ? (
+                <section className="card dash-card admin-card">
+                  <h2 className="dash-card-title">Site admin</h2>
+                  <p className="muted small dash-card-desc">
+                    Delete any room by exact name.
+                  </p>
+                  <div className="dash-form-row">
+                    <input
+                      className="input grow"
+                      value={adminDeleteName}
+                      onChange={(e) => setAdminDeleteName(e.target.value)}
+                      placeholder="Room name"
+                      autoComplete="off"
+                    />
+                    <button
+                      type="button"
+                      className="btn danger-outline"
+                      disabled={adminDeleting || !adminDeleteName.trim()}
+                      onClick={() => {
+                        void (async () => {
+                          setAdminDeleting(true);
+                          setNotice(null);
+                          try {
+                            await deleteRoomByName({ name: adminDeleteName.trim() });
+                            setAdminDeleteName("");
+                            setNotice("Room deleted.");
+                          } catch (e) {
+                            setNotice(e instanceof Error ? e.message : "Could not delete");
+                          } finally {
+                            setAdminDeleting(false);
+                          }
+                        })();
+                      }}
+                    >
+                      {adminDeleting ? "…" : "Delete"}
+                    </button>
+                  </div>
+                </section>
+              ) : null}
+            </aside>
+
+            {/* ── Right column: quizzes + profile ── */}
+            <div className="dash-main">
+              {profileOpen ? (
+                <section className="card dash-card profile-editor">
+                  <h2 className="dash-card-title">Your profile</h2>
+                  <p className="muted small dash-card-desc">
+                    Display name is your label in rooms. Upload a photo or paste
+                    an image URL.
+                  </p>
+                  <div className="profile-avatar-row">
+                    {myProfile?.avatarUrl ? (
+                      <img
+                        src={myProfile.avatarUrl}
+                        alt=""
+                        className="avatar-img profile-avatar-preview"
+                        width={72}
+                        height={72}
+                      />
+                    ) : (
+                      <div
+                        className="avatar-fallback profile-avatar-preview"
+                        aria-hidden
+                      />
+                    )}
+                    <div className="profile-avatar-actions">
+                      <label className="btn ghost profile-upload-label">
+                        {avatarUploading ? "Uploading…" : "Upload photo"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="visually-hidden"
+                          disabled={avatarUploading}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0] ?? null;
+                            e.target.value = "";
+                            void onAvatarFileSelected(f);
+                          }}
+                        />
+                      </label>
+                      {myProfile?.imageStorageId ? (
+                        <button
+                          type="button"
+                          className="btn ghost small"
+                          disabled={avatarUploading}
+                          onClick={() => {
+                            void (async () => {
+                              setNotice(null);
+                              try {
+                                await removeAvatarUpload();
+                              } catch (err) {
+                                setNotice(
+                                  err instanceof Error
+                                    ? err.message
+                                    : "Could not remove photo",
+                                );
+                              }
+                            })();
+                          }}
+                        >
+                          Remove upload
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <label className="label">
+                    Display name
+                    <input
+                      className="input"
+                      value={profileNameDraft}
+                      onChange={(e) => setProfileNameDraft(e.target.value)}
+                      autoComplete="name"
+                    />
+                  </label>
+                  <label className="label">
+                    Profile picture URL (optional)
+                    <input
+                      className="input"
+                      value={profileImageDraft}
+                      onChange={(e) => setProfileImageDraft(e.target.value)}
+                      placeholder="https://…"
+                      autoComplete="off"
+                    />
+                  </label>
+                  <div className="dash-form-actions">
+                    <button
+                      type="button"
+                      className="btn primary"
+                      disabled={profileSaving}
+                      onClick={() => {
+                        void (async () => {
+                          setProfileSaving(true);
+                          setNotice(null);
+                          try {
+                            await updateMyProfile({
+                              name: profileNameDraft,
+                              image: profileImageDraft,
+                            });
+                            setProfileOpen(false);
+                            setDisplayName(profileNameDraft.trim());
+                            persistDisplayName(profileNameDraft.trim());
+                            if (roomId) {
+                              writeJoinedSession(roomId, profileNameDraft.trim());
+                              setSessionJoinName(profileNameDraft.trim());
+                            }
+                          } catch (e) {
+                            setNotice(
+                              e instanceof Error ? e.message : "Could not save",
+                            );
+                          } finally {
+                            setProfileSaving(false);
+                          }
+                        })();
+                      }}
+                    >
+                      {profileSaving ? "Saving…" : "Save profile"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn ghost"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </section>
+              ) : null}
+
+              <DashboardQuizzes
+                myProfile={myProfile ?? undefined}
+                onSaveLearningProfile={async (args) => {
+                  await updateMyProfile(args);
+                }}
+                setNotice={setNotice}
               />
-            </label>
-            <label className="label">
-              Room password
-              <input
-                className="input"
-                type="password"
-                value={roomPassword}
-                onChange={(e) => setRoomPassword(e.target.value)}
-                placeholder={
-                  roomPreview?.exists === false
-                    ? "Min 4 characters — you choose who gets it"
-                    : roomPreview?.exists === true && roomPreview.hasPassword
-                      ? "From the room owner"
-                      : "Optional for older rooms without a password"
-                }
-                autoComplete="new-password"
-              />
-            </label>
-            {roomName.trim() && roomPreview === undefined ? (
-              <p className="muted small">Checking room…</p>
-            ) : roomPreview?.exists === false ? (
-              <p className="muted small">
-                New room: set a password (min 4 characters). You are the owner
-                — share the room name + password with study partners.
-              </p>
-            ) : roomPreview?.exists === true && roomPreview.hasPassword ? (
-              <p className="muted small">
-                This room is password-protected. Enter the password from the
-                owner.
-              </p>
-            ) : roomName.trim() ? (
-              <p className="muted small">
-                This room has no password (legacy). Leave the password blank or
-                ask the owner.
-              </p>
-            ) : null}
-            <div className="landing-actions">
-              <button
-                type="button"
-                className="btn primary"
-                disabled={
-                  joining ||
-                  !displayName.trim() ||
-                  !roomName.trim() ||
-                  (Boolean(roomName.trim()) && roomPreview === undefined) ||
-                  roomPreview?.exists === true
-                }
-                onClick={() => void attemptCreateOrJoin("create")}
-              >
-                {joining && joinMode === "create"
-                  ? "Creating…"
-                  : "Create room"}
-              </button>
-              <button
-                type="button"
-                className="btn primary landing-join"
-                disabled={
-                  joining ||
-                  !displayName.trim() ||
-                  !roomName.trim() ||
-                  (Boolean(roomName.trim()) && roomPreview === undefined) ||
-                  roomPreview?.exists === false
-                }
-                onClick={() => void attemptCreateOrJoin("join")}
-              >
-                {joining && joinMode === "join" ? "Joining…" : "Join room"}
-              </button>
             </div>
-          </form>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     );
   }
 
