@@ -1689,3 +1689,193 @@ body {
     justify-content: center;
   }
 }
+
+/* —— Mercury Landing Page Styles —— */
+.mercury-landing {
+  background-color: #F7F7F5;
+  color: #111827;
+  min-height: 100vh;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+.mercury-landing * {
+  box-sizing: border-box;
+}
+
+.mercury-header {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+}
+
+.mercury-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mercury-logo svg {
+  width: 32px;
+  height: 32px;
+}
+
+.mercury-brand-name {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+.mercury-nav {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mercury-nav {
+    display: flex;
+    gap: 2rem;
+  }
+}
+
+.mercury-nav a {
+  text-decoration: none;
+  color: #4B5563;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+.mercury-nav a:hover {
+  color: #111827;
+}
+
+.mercury-auth-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mercury-btn-link {
+  background: none;
+  border: none;
+  color: #111827;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.mercury-btn-link:hover {
+  color: #374151;
+}
+
+.mercury-btn-primary {
+  background-color: #111827;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.mercury-btn-primary:hover {
+  background-color: #374151;
+}
+
+.mercury-hero {
+  max-width: 800px;
+  text-align: center;
+  padding: 4rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mercury-title {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: #111827;
+  margin: 0 0 1.5rem;
+}
+
+.mercury-subtitle {
+  font-size: clamp(1.1rem, 2vw, 1.25rem);
+  color: #4B5563;
+  line-height: 1.5;
+  max-width: 600px;
+  margin: 0 0 2.5rem;
+}
+
+.mercury-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 4rem;
+}
+
+.mercury-btn-secondary {
+  background-color: #E5E7EB;
+  color: #111827;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.mercury-btn-secondary:hover {
+  background-color: #D1D5DB;
+}
+
+.mercury-mockup-section {
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 2rem 4rem;
+}
+
+.mercury-mockup-wrapper {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  background-color: #FFFFFF;
+  aspect-ratio: 16 / 9;
+}
+
+.mercury-mockup-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mercury-mockup-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mercury-mockup-placeholder::after {
+  content: "Dashboard Preview";
+  color: #9CA3AF;
+  font-size: 1.5rem;
+  font-weight: 500;
+}

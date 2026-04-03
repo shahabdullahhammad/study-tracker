@@ -65,64 +65,57 @@ export function SignInPage() {
   };
 
   return (
-    <main className="shell landing-shell landing-hero-page">
-      <div className="landing-hero-grid" aria-hidden />
-      <div className="landing-hero-glow" aria-hidden />
-
-      <div className="card landing-card landing-card--hero">
-        <div className="landing-hero-content">
-          <div className="landing-hero-icon-wrap">
-            <div className="landing-hero-rings" aria-hidden />
-            <LayersIcon gradId={`landingIconGrad-${iconGradId}`} />
-          </div>
-
-          <h1 className="landing-hero-title">{APP_NAME}</h1>
-          <p className="landing-hero-subtitle">
-            Redefining Collaborative Productivity
-          </p>
-
-          <div className="landing-url-pill" role="status">
-            <span className="landing-url-pill-dot" aria-hidden />
-            <span className="landing-url-pill-text">
-              primestudytracker.vercel.app
-            </span>
-          </div>
-
-          <p className="muted small landing-hero-signin-hint">
-            Use Google, GitHub, or Discord. Then open your dashboard and study
-            rooms.
-          </p>
-
-          <div className="stack auth-provider-btns landing-hero-auth">
-            <button
-              type="button"
-              className="btn primary"
-              onClick={() => signInWithLog("google")}
-            >
-              Continue with Google
-            </button>
-            <button
-              type="button"
-              className="btn landing-join"
-              onClick={() => signInWithLog("github")}
-            >
-              Continue with GitHub
-            </button>
-            <button
-              type="button"
-              className="btn discord"
-              onClick={() => signInWithLog("discord")}
-            >
-              Continue with Discord
-            </button>
-          </div>
+    <main className="mercury-landing">
+      <header className="mercury-header">
+        <div className="mercury-logo">
+          <LayersIcon gradId={`landingIconGrad-${iconGradId}`} />
+          <span className="mercury-brand-name">{APP_NAME}</span>
         </div>
+        <nav className="mercury-nav">
+          <a href="#">Products</a>
+          <a href="#">Solutions</a>
+          <a href="#">Resources</a>
+          <a href="#">About</a>
+          <a href="#">Pricing</a>
+        </nav>
+        <div className="mercury-auth-nav">
+          <button className="mercury-btn-link" onClick={() => signInWithLog("github")}>Log In</button>
+          <button className="mercury-btn-primary" onClick={() => signInWithLog("google")}>Open Account</button>
+        </div>
+      </header>
 
-        <footer className="landing-hero-footer-inline">
-          <span>NIT SRINAGAR CURSOR HACKATHON 2026</span>
-          <span>SHAH ABDULLAH HAMMAAD</span>
-        </footer>
-      </div>
+      <section className="mercury-hero">
+        <h1 className="mercury-title">Redefining Collaborative Productivity.</h1>
+        <p className="mercury-subtitle">
+          Use Google, GitHub, or Discord. Then open your dashboard and study rooms.
+        </p>
+        
+        <div className="mercury-actions">
+          <button className="mercury-btn-primary" onClick={() => signInWithLog("google")}>
+            Continue with Google
+          </button>
+          <button className="mercury-btn-secondary" onClick={() => signInWithLog("github")}>
+            Continue with GitHub
+          </button>
+          <button className="mercury-btn-secondary" onClick={() => signInWithLog("discord")}>
+            Continue with Discord
+          </button>
+        </div>
+      </section>
+
+      <section className="mercury-mockup-section">
+        <div className="mercury-mockup-wrapper">
+          <img 
+            src="/dashboard-mockup.png" 
+            alt="Dashboard Mockup" 
+            className="mercury-mockup-img" 
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.parentElement?.classList.add('mercury-mockup-placeholder');
+            }}
+          />
+        </div>
+      </section>
     </main>
   );
 }
